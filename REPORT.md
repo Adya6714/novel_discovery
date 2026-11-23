@@ -4,10 +4,24 @@
 (branch `research/discovery-programme`). Status labels used throughout: **[done]** = executed and verified here,
 **[proposed]** = not executed.
 
-<!-- RESULTS_PLACEHOLDER: sections 6-9 are filled from results/ by the analysis scripts; see bottom of file for provenance -->
 
 ## Abstract
-(Written last; see section 12.)
+When a transformer is trained with teacher forcing on *correct* chains of written intermediate values, the loss cannot tell apart a model
+that reads its previous written intermediate from one that recomputes the next intermediate from the input. We ask which route training
+selects. We use window-sum chains whose window size K moves the relative cost of the two routes, and train 2-layer transformers from scratch
+(24-model sweep plus 30 control models). We measure causal reliance with three oracle-validated interventions: chain-token corruption, coherent
+counterfactual chains and input-side corruption. With correct chains and no noise, models with K ≤ 2 ignore their written intermediates
+completely: corrupting the chain never changes the next prediction (6/6 models), and they silently "self-correct" corrupted chains.
+Models with K ≥ 4, including ordinary prefix-sum chains, read their intermediates and propagate errors (15/15). An independent,
+behaviour-free measure of cost — how fast each route is learned when the other is masked out — predicts the selected route whenever the
+routes differ in learnability (K = 2, 4, 6; 3 seeds each). At near-parity (K = 3) the choice is seed-dependent: 6/9 models recompute, 2/9 read
+and 1/9 splits by position. These split and read outcomes depend on learned absolute positions and disappear when positions are randomly
+shifted during training, after which all 3/3 K = 3 models recompute, as predicted by learnability. The underlying principle — training prefers
+the more available of redundant solutions — is known from shortcut learning and imitation learning. Our contribution is to show
+it decides whether chain-of-thought intermediates are causally used, even when they are correct, below the serial "ceiling". Faithfulness
+measured by corrupting intermediates is therefore a property of which route training selected, not of chain-of-thought supervision per se.
+A secondary, independent study extends exhaustive exact searches of the Lonely Runner spectrum (n = 7 to speed 100, n = 8 to 70, n = 9 to 55),
+finding no counterexample to the amended Fan–Sun conjecture and one new k = 2 septuple.
 
 ## 1. Introduction
 Chain-of-thought (CoT) traces are increasingly used as a window into model computation, for example in AI-safety monitoring. That
@@ -124,20 +138,56 @@ Forced-READ and forced-RECOMPUTE models (attention whitelists), 3 seeds each, ev
 | 4 | **180, 160, 180** | 400, 500, 560 | READ (≈ 2.8×) | 3/3 |
 | 6 | **180, 160, 200** | not learned in 800 steps (acc 0.07–0.08) | READ | 3/3 |
 
-Where one strategy is clearly more learnable in isolation, all free models select it (9/9 models at K ∈ {2, 4, 6}); where the two are
-nearly equally learnable (K = 3), selection differs between seeds. This operational cost is defined without reference to the free models'
+Where one strategy is clearly more learnable in isolation, all free models select it (9/9 models at K ∈ {2, 4, 6}); at K = 3 the two are
+nearly equally learnable, RECOMPUTE marginally faster early (to 0.5: 120 vs 140–160; AUC≤400: 0.759 vs 0.696), and 6/9 free models recompute
+(§7.2). This operational cost is defined without reference to the free models'
 behaviour, which answers the circularity objection; note that it measures cost *for this architecture and layout*, including factors
 such as attention offsets that operand counting ignores.
 
 ### 7.2 Position-offset control and K = 3 census
-PLACEHOLDER_CENSUS
+Per-slot census (label READ if FOLLOW ≥ 0.9, RECOMPUTE if RECOMPUTE ≥ 0.9, else mixed); Fig. 3.
+
+**K = 3, learned absolute positions, 9 seeds** (3 from the sweep + 6 added after review):
+
+| pattern at slots j ≥ 3 | seeds | fraction (95 % CI) |
+|---|---|---|
+| RECOMPUTE at every slot | 2, 3, 4, 5, 6, 7 | 6/9 (0.30–0.93) |
+| READ at every slot but ≤ 1 | 0 (slot 6 RECOMPUTE), 1 | 2/9 (0.03–0.60) |
+| half/half mosaic (READ j = 3–5, RECOMPUTE j = 6–11) | 8 | 1/9 (0.003–0.48) |
+
+At slot 2 (j < K: READ retrieves 1 operand vs 2) all 9 models READ; at slot 1 (tie, 1 vs 1) all 9 are mixed. The first two seeds we
+trained happened to be the two READ seeds; the "read preference at parity" suggested by them (and by the reviewer, reasonably, from the
+data then available) does not survive a larger sample.
+
+**Position-offset control** (absolute positions randomly shifted by 0–16 during training; evaluated at shifts 0, 8, 16):
+K = 3, 3 seeds: RECOMPUTE at every slot j ≥ 3, at every evaluation shift (9/9 model×shift cells), slot 2 RECOMPUTE or mixed, no mosaics;
+K = 2: RECOMPUTE everywhere; K = 4: READ everywhere (all shifts). Conclusions: (i) the K = 3 READ seeds and mosaics depend on learned
+absolute positions (reviewer objection 2.1 confirmed); (ii) the K = 2 / K = 4 contrast and the K = 3 majority choice do not; (iii) with
+absolute-position shortcuts removed, free models choose the route that is more learnable in isolation at all tested K (2: RECOMPUTE,
+3: RECOMPUTE, 4: READ). Forced-strategy learnability *with the same position shifts* (2 seeds): K = 3 — RECOMPUTE-only reaches 0.5 worst-slot accuracy
+first (steps 120, 160 vs READ-only 200, 180; AUC over the first 400 steps 0.599 vs 0.563) but plateaus at 0.95 within 800 steps, whereas
+READ-only reaches 0.99 at 400–440; K = 4 — READ-only faster on every criterion (0.99 at 340–400; RECOMPUTE-only reaches 0.5 at 300 and
+plateaus at 0.83–0.86).
+
+**Which cost criterion?** Across all six comparisons (absolute positions K = 2, 3, 4, 6; shifted K = 3, 4), *early* learnability (AUC over the first
+400 steps, or steps to 0.5) predicts the free models' majority route in 6/6; steps-to-0.99 predicts 5/6 and fails for shifted K = 3. The criterion
+was not fixed in advance (the analysis script computed steps-to-0.99 and AUC; steps-to-0.5 was added when the coarse runs proved too coarse).
+We therefore state the result as: *the route that is learned faster early in training is the route the unconstrained model adopts*.
+
+**Training dynamics** (K = 3, seed 7, checkpoints every 500 steps): at step 500 only slot 2 is solved (by READ, its cheapest route);
+by step 1000 all slots are solved and the route pattern (mixed, READ, RECOMPUTE × 9) is final; it is unchanged at 1500–3000 steps.
+No switching was observed within this budget (longer training untested).
 
 ### 7.3 Spillover test
-PLACEHOLDER_SPILLOVER
+Hypothesis (post hoc): READ circuits learned at slots j < K (where READ is strictly cheaper) spill over to parity slots. Test: train with
+loss only on slots j > K (c_1..c_{K+1} unsupervised but present as input). Result: K = 3, 3/3 seeds RECOMPUTE at every supervised slot (standard
+training: 6/9); K = 4 (1 seed) READ at every supervised slot. The direction is consistent with a small spillover effect, but 3/3 vs 6/9 is
+not statistically distinguishable (Fisher exact two-sided p ≈ 0.5); we report the test as inconclusive. K = 4 READ does not depend on
+early-slot supervision.
 
 ## 8. Hypotheses: verdicts
 * **H1** (FOLLOW increases with K; K ≤ 2 RECOMPUTE, K ≥ 6 FOLLOW): **supported** (K ≤ 2: 0/6 READ; K ≥ 4: 15/15 READ; monotone except
-  the seed-dependent parity point K = 3). Disconfirmation criteria in the preregistration were not met.
+  the seed-dependent parity point K = 3, where 6/9 models recompute). Disconfirmation criteria in the preregistration were not met.
 * **H0a** (always read): **rejected** (K = 2: FOLLOW 0.000 in 3/3 models although the written chain is correct and usable).
 * **H0b** (always recompute when computable): **rejected** (K ≥ 4 models read although forced-RECOMPUTE models show recomputation is learnable
   at K = 4).
@@ -157,4 +207,52 @@ PLACEHOLDER_SPILLOVER
   an external registry. All changes are logged with reasons.
 * All interpretation and review were performed by AI agents; no human has yet checked the work.
 ## 10. Lonely-runner secondary study
-See `lonely_runner/RESULTS.md`.
+Exhaustive, exact enumeration of near-tight tuples (ML < 1/n) with an independent integer kernel, validated against every count published by
+Cordella (arXiv 2609.03444) and against brute-force exact ML at small radius. New radii: n = 7 ≤ 100 (1.6·10^10 tuples; 40 primitive
+near-tight, k ∈ {1, 2}), n = 8 ≤ 70 (40, all k = 1), n = 9 ≤ 55 (13, all k = 1). No counterexample to the amended Fan–Sun conjecture; Kravitz's
+original form holds for n = 8, 9 in range; new k = 2 septuple (2, 7, 9, 11, 13, 20, 54) with ML = 9/65. A conjectured mod-3 pattern for which
+k occur was refuted by the n = 9 data. Significance is low after Yi–Gill–Bu (arXiv 2610.40694). Details: `lonely_runner/RESULTS.md`.
+
+## 11. Implications
+1. **Correct chain supervision does not guarantee chain use.** Below the serial ceiling, whether a chain-trained transformer uses its written
+   intermediates is decided by which route is learned faster, not by the presence of a correct chain. Corruption-based faithfulness tests on such
+   models measure that route choice.
+2. **Identically trained models can differ in faithfulness.** At near-parity, the same data and architecture yield chain-readers and
+   chain-ignorers depending on the seed, and on the positional encoding. Faithfulness evaluations should report variability across training runs.
+3. **"Self-correction" can be an artefact of route selection.** Models that ignore their chain appear to correct injected errors perfectly;
+   models that read propagate them. Neither involves error detection.
+4. **Design lever.** To make a model depend on its chain (e.g., for monitorability), make reading more learnable than recomputing (for
+   example by making the intermediate hard to recompute in one pass — the regime of 2609.33134); to make it robust to corrupted chains, the
+   reverse.
+These implications are demonstrated only in a 2-layer toy setting; transfer to large models is a hypothesis.
+
+## 12. Reproducibility
+All code, per-model results (`cot_reliance/results/*.json`), logs and figures are in the repository; checkpoints are regenerable
+(seeds fixed; CPU training, ≈ 15 min per model on one core). `test_targets.py` and `test_oracle.py` are unit tests for data alignment and the
+intervention metrics. README gives the commands. Complete decision history: `docs/05_decision_log.md`.
+
+## References
+* Atila, Sukhomlinov & Müser (2025). Cold self-lubrication of sliding ice. Phys. Rev. Lett. (arXiv 2402.10843). [landscape]
+* Cordella, F. (2026). Odd denominators in the Lonely Runner spectrum for six speeds. arXiv 2609.03444.
+* de Haan, Jayaraman & Levine (2019). Causal confusion in imitation learning. NeurIPS. arXiv 1905.11979.
+* Fan & Sun (2023/2026). Amending the Lonely Runner Spectrum Conjecture. arXiv 2306.10417; Electron. J. Combin.
+* Giri & Kravitz (2023). The structure of Lonely Runner spectra. arXiv 2304.01462.
+* Hermann & Lampinen (2020). What shapes feature representations? Exploring datasets, architectures, and training. NeurIPS. arXiv 2006.12433.
+* Hermann, Mobahi, Fel & Mozer (2023). On the foundations of shortcut learning. ICLR 2024. arXiv 2310.16228.
+* Kawata, Song & Bietti (2025). From shortcut to induction head: how data diversity shapes algorithm selection in transformers. arXiv 2512.18634.
+* Kravitz, N. (2021). Barely lonely runners and very lonely runners. Combinatorial Theory.
+* Lanham et al. (2023). Measuring faithfulness in chain-of-thought reasoning. arXiv 2307.13702.
+* Li, Liu, Zhou & Ma (2024). Chain of thought empowers transformers to solve inherently serial problems. ICLR. arXiv 2402.12875.
+* Liu, Ash, Goel, Krishnamurthy & Zhang (2023). Transformers learn shortcuts to automata. ICLR. arXiv 2210.10749.
+* Merrill & Sabharwal (2024). The expressive power of transformers with chain of thought. ICLR. arXiv 2310.07923.
+* Sarnataro, Velasco, Monaco, Kempf & Miesenböck (2025). Mitochondrial origins of the pressure to sleep. Nature 645:722. [landscape]
+* Shah, Tamuly, Raghunathan, Jain & Netrapalli (2020). The pitfalls of simplicity bias in neural networks. NeurIPS. arXiv 2006.07710.
+* Shih, Winnicki & Darve (2026). When does activation steering change what a model computes from? arXiv 2606.29522.
+* Valmeekam, Palod, Stechly, Gundawar & Kambhampati (2026). Beyond semantics: the unreasonable effectiveness of reasonless intermediate tokens. TMLR. arXiv 2505.13775.
+* Wen, Lin, Darrell, Jayaraman & Gao (2020). Fighting copycat agents in behavioral cloning from observation histories. NeurIPS. arXiv 2010.14876.
+* Yi, Gill & Bu (2026). Four runners that are barely lonely. arXiv 2610.40694.
+* Zhong, Liu, Tegmark & Andreas (2023). The clock and the pizza: two stories in mechanistic explanation of neural networks. NeurIPS. arXiv 2306.17844.
+* Zhu, Wang & Sui (2025). Chain-of-thought tokens are computer program variables. arXiv 2505.04955.
+* Wang, Alazali & Zhong (2026). How does unfaithful reasoning emerge from autoregressive training? A study of synthetic experiments. arXiv 2602.01017.
+* He, Fan, Xiao, Marculescu & Ribeiro (2026). Ceiling of a task: when can a transformer succeed without its chain of thought? arXiv 2609.33134.
+* Garcia, G. (2026). The last word often wins: a format confound in chain-of-thought corruption studies. arXiv 2605.10799.

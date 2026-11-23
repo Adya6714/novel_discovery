@@ -33,3 +33,13 @@ trace supervision creates an internally editable register in a state-tracking ta
 | 2.8 | Gate never binds; short training (minor) | **[tested, partly]** training-dynamics run (checkpoints every 250 steps) for one K=3 seed; long-training (30k) not done — listed as future work |
 | 5.2 | Lonely runner: low significance; misses Yi–Gill–Bu 2610.40694; tight sets known (major) | **[accepted]** Cited; tight septuples relabelled as known instances; significance downgraded to "data note" |
 | 5.3 | Add independent small-radius cross-check (minor) | **[accepted]** see `lonely_runner/crosscheck.py` |
+
+## Outcomes of the experiments run in response
+* **2.1 (positional artefact):** confirmed. Under random position shifts, all K = 3 models recompute uniformly (no mosaics, no READ seeds); K = 2
+  RECOMPUTE and K = 4 READ are unchanged. The mosaic is reported only as a property of absolute-position models (2/9).
+* **3.1 (independent cost):** forced-strategy learnability predicts the free model's majority route in all six comparisons using early
+  learnability (AUC ≤ 400 steps / steps to 0.5), and in 5/6 using steps-to-0.99 (fails for shifted K = 3). The criterion was not fixed in
+  advance; the claim is stated in its early-learnability form, with this caveat.
+* **4.1 / 3.4 (seeds; read preference at parity):** with 9 seeds the parity majority is RECOMPUTE (6/9), not READ (2/9); the reviewer's
+  "read preference" inference from the first two seeds was reasonable but did not survive the larger sample.
+* **2.8 (dynamics):** route pattern fixed by step 1000 and stable to 3000 (one seed); long training untested.

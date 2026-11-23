@@ -20,4 +20,7 @@
 | D17 | Review-response experiments replaced the depth-4 / p=17 arms (now future work) | Reviewer objections 2.1, 3.1, 4.1 are more decisive |
 | D18 | Coarse forced-strategy runs (eval every 100 steps, 2000 steps) abandoned after 4 models; relaunched at 800 steps with eval every 20 steps, 3 seeds | Coarse runs showed both strategies converge within 200–300 steps, so 100-step resolution could not separate them; first coarse data (K=3 seed 0: RECOMPUTE-only reached 0.99 at 200, READ-only at 300) was noted *before* the fine runs |
 | D19 | K8_L2_s2 failed the gate at 3000 steps (first time the gate bound); continued per D13 and re-analysed after continuation | Protocol as preregistered (gate) and amended (D13) |
+| D20 | Spillover test (loss only on j > K) added post hoc | To test whether READ at parity came from early-slot circuits; result inconclusive (3/3 vs 6/9, p ≈ 0.5) |
+| D21 | Forced-strategy learnability repeated with position shifts | Like-for-like comparison with the position-offset free models; revealed that the cost criterion matters (steps-to-0.99 vs early AUC) — reported openly |
+| D22 | Main claim reformulated: "route learned faster early is adopted"; mosaic claim demoted to "occurs in 2/9 absolute-position models, 0/3 position-shifted" | Results of census (9 seeds), position control, forced learnability |
 | D9 | Preregistered window-task hypotheses before training any window model | `docs/02_preregistration_cot_reliance.md` |

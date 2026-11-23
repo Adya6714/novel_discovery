@@ -5,8 +5,8 @@
 |---|---|---|
 | C1. Transformers trained on *correct* written chains can ignore them entirely: at K ≤ 2, prediction of each next intermediate is recomputed from the input and does not depend on the written intermediate | 6/6 models; three independent intervention types; coherent counterfactual excludes older-chain reading; oracle-validated metric; reviewer reproduced | Strong (for this setting) |
 | C2. At K ≥ 4 (incl. ordinary prefix CoT) the same architecture reads its written intermediates (errors propagate) | 15/15 models, all three interventions | Strong (for this setting) |
-| C3. The selected route is the one that is more learnable in isolation (independent cost) | forced-strategy learnability, 3 seeds × K ∈ {2,3,4,6}; 9/9 decisive-K free models match | Moderate (4 K values, one architecture) |
-| C4. Near cost parity (K = 3) selection is seed-dependent | 9 seeds (see REPORT §7.2) | Moderate; exploratory, post hoc |
+| C3. The adopted route is the one learned faster early when trained in isolation (independent cost) | forced-strategy learnability, 3 seeds × K ∈ {2,3,4,6} + position-shifted K ∈ {3,4}: 6/6 comparisons by early AUC (5/6 by steps-to-0.99) | Moderate (criterion not preregistered; one architecture) |
+| C4. Near cost parity (K = 3) selection is seed-dependent with absolute positions (6/9 RECOMPUTE, 2/9 READ, 1/9 split); uniform RECOMPUTE with position shifts (3/3) | 9 + 3 seeds | Moderate; exploratory, post hoc |
 | C5. "Self-correction" of corrupted intermediates is a by-product of route selection | free-run continuation, all models | Strong (descriptive) |
 | L1. Lonely-runner amended conjecture holds in extended radii (n=7 ≤ 100, n=8 ≤ 70, n=9 ≤ 55); new k=2 septuple (2,7,9,11,13,20,54) | exact search, cross-checked | Strong, low significance |
 

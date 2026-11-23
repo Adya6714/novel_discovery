@@ -69,8 +69,8 @@ try:
     ax.set_xticks(range(1, 12)); ax.set_xlabel('corrupted chain slot j'); ax.set_xlim(0.4, 11.6); ax.set_ylim(-0.6, len(items) - 0.4)
     ax.invert_yaxis(); ax.grid(False)
     ax.legend(handles=[Patch(color=BLUE, label='READ'), Patch(color=ORANGE, label='RECOMPUTE'), Patch(color=GRAY, label='mixed')],
-              fontsize=7, loc='upper center', bbox_to_anchor=(0.5, -0.12 - 0.6 / len(items)), ncol=3)
-    ax.set_title('Per-slot dominant route (FOLLOW or RECOMPUTE ≥ 0.9)')
+              fontsize=7, loc='lower center', bbox_to_anchor=(0.5, 1.03), ncol=3)
+    ax.set_title('Per-slot dominant route (FOLLOW or RECOMPUTE ≥ 0.9)', pad=22)
     fig.tight_layout(); fig.savefig(f'{out}/fig3_census.png', dpi=220); plt.close(fig)
 except FileNotFoundError:
     print('no census yet')
