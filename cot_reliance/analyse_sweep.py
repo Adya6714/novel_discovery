@@ -51,5 +51,5 @@ if len(sys.argv) > 3 and sys.argv[3] == '--untrained':   # negative control
         m = GPT(task.vocab, d=128, layers=2, maxlen=26).eval()  # interleaved layout, same as trained models
         s = summarise(m, task, dict(group=f'win:11:{K}', layers=2, untrained=True), torch.Generator().manual_seed(2024))
         res[f'untrained_K{K}'] = s
-        print('untrained', K, s['single_jgeK_follow'], s['single_jgeK_recompute'])
+        print('untrained', K, s.get('single_jgeK_follow', s.get('single_jltK_follow')), s.get('single_jgeK_recompute', s.get('single_jltK_recompute')))
     json.dump(res, open(out, 'w'))

@@ -1,0 +1,9 @@
+iwin:11:2 chain L2 it20 loss 2.6724 evalL12 loss 2.6288 acc 0.1367 minslot 0.0742 7s
+iwin:11:2 chain L2 it40 loss 2.2412 evalL12 loss 2.2318 acc 0.1693 minslot 0.0762 13s
+iwin:11:2 chain L2 it60 loss 2.2122 evalL12 loss 2.2089 acc 0.1724 minslot 0.0586 21s
+iwin:11:2 chain L2 it80 loss 2.2026 evalL12 loss 2.2023 acc 0.1787 minslot 0.0898 30s
+iwin:11:2 chain L2 it100 loss 2.1844 evalL12 loss 2.1868 acc 0.1790 minslot 0.0703 38s
+iwin:11:2 chain L2 it120 loss 2.1470 evalL12 loss 2.1386 acc 0.2209 minslot 0.1016 45s
+iwin:11:2 chain L2 it140 loss 1.9263 evalL12 loss 1.9022 acc 0.3094 minslot 0.1543 53s
+iwin:11:2 chain L2 it160 loss 0.9942 evalL12 loss 0.9337 acc 0.6234 minslot 0.5176 61s
+iwin:11:2 chain L2 it180 loss 0.3670 evalL12 loss 0.3454 acc 0.9256 minslot 0.8906 69s

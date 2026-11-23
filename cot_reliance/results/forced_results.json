@@ -1,0 +1,162 @@
+[
+ {
+  "path": "runs/forced/K2_read_s0.pt",
+  "K": 2,
+  "force": "read",
+  "seed": 0,
+  "steps_to_criterion": 200,
+  "steps_to_half": 160,
+  "auc": 0.66884765625,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K2_read_s1.pt",
+  "K": 2,
+  "force": "read",
+  "seed": 1,
+  "steps_to_criterion": 180,
+  "steps_to_half": 160,
+  "auc": 0.6845703125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K2_recompute_s0.pt",
+  "K": 2,
+  "force": "recompute",
+  "seed": 0,
+  "steps_to_criterion": 80,
+  "steps_to_half": 60,
+  "auc": 0.90859375,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K2_recompute_s1.pt",
+  "K": 2,
+  "force": "recompute",
+  "seed": 1,
+  "steps_to_criterion": 80,
+  "steps_to_half": 60,
+  "auc": 0.90458984375,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K3_read_s0.pt",
+  "K": 3,
+  "force": "read",
+  "seed": 0,
+  "steps_to_criterion": 200,
+  "steps_to_half": 160,
+  "auc": 0.69111328125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K3_read_s1.pt",
+  "K": 3,
+  "force": "read",
+  "seed": 1,
+  "steps_to_criterion": 180,
+  "steps_to_half": 140,
+  "auc": 0.71640625,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K3_recompute_s0.pt",
+  "K": 3,
+  "force": "recompute",
+  "seed": 0,
+  "steps_to_criterion": 160,
+  "steps_to_half": 120,
+  "auc": 0.7720703125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K3_recompute_s1.pt",
+  "K": 3,
+  "force": "recompute",
+  "seed": 1,
+  "steps_to_criterion": 180,
+  "steps_to_half": 120,
+  "auc": 0.764453125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K4_read_s0.pt",
+  "K": 4,
+  "force": "read",
+  "seed": 0,
+  "steps_to_criterion": 180,
+  "steps_to_half": 140,
+  "auc": 0.7017578125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K4_read_s1.pt",
+  "K": 4,
+  "force": "read",
+  "seed": 1,
+  "steps_to_criterion": 160,
+  "steps_to_half": 120,
+  "auc": 0.74482421875,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K4_recompute_s0.pt",
+  "K": 4,
+  "force": "recompute",
+  "seed": 0,
+  "steps_to_criterion": 400,
+  "steps_to_half": 240,
+  "auc": 0.4505859375,
+  "final_minslot": 0.998046875
+ },
+ {
+  "path": "runs/forced/K4_recompute_s1.pt",
+  "K": 4,
+  "force": "recompute",
+  "seed": 1,
+  "steps_to_criterion": 500,
+  "steps_to_half": 280,
+  "auc": 0.36630859375,
+  "final_minslot": 0.99609375
+ },
+ {
+  "path": "runs/forced/K6_read_s0.pt",
+  "K": 6,
+  "force": "read",
+  "seed": 0,
+  "steps_to_criterion": 180,
+  "steps_to_half": 140,
+  "auc": 0.7083984375,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K6_read_s1.pt",
+  "K": 6,
+  "force": "read",
+  "seed": 1,
+  "steps_to_criterion": 160,
+  "steps_to_half": 120,
+  "auc": 0.75048828125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K6_recompute_s0.pt",
+  "K": 6,
+  "force": "recompute",
+  "seed": 0,
+  "steps_to_criterion": null,
+  "steps_to_half": null,
+  "auc": 0.075390625,
+  "final_minslot": 0.080078125
+ },
+ {
+  "path": "runs/forced/K6_recompute_s1.pt",
+  "K": 6,
+  "force": "recompute",
+  "seed": 1,
+  "steps_to_criterion": null,
+  "steps_to_half": null,
+  "auc": 0.07373046875,
+  "final_minslot": 0.072265625
+ }
+]

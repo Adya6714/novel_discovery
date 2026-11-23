@@ -9,10 +9,13 @@ for p in sorted(glob.glob('runs/forced/*.pt')):
     ck = torch.load(p, weights_only=False); c = ck['cfg']; h = ck['hist']
     K = int(c['group'].split(':')[2]); its = [x[0] for x in h]; ms = [x[4] for x in h]
     stc = next((it for it, v in zip(its, ms) if v >= 0.99), None)
-    rows.append(dict(path=p, K=K, force=c['force'], seed=c['seed'], steps_to_criterion=stc, auc=float(np.mean(ms)), final_minslot=ms[-1]))
+    s50 = next((it for it, v in zip(its, ms) if v >= 0.5), None)
+    early = [v for it, v in zip(its, ms) if it <= 400]
+    rows.append(dict(path=p, K=K, force=c['force'], seed=c['seed'], steps_to_criterion=stc, steps_to_half=s50,
+                     auc=float(np.mean(early)), final_minslot=ms[-1]))
 by = collections.defaultdict(list)
 for r in rows: by[(r['K'], r['force'])].append(r)
-print(f"{'K':>3} {'strategy':>10} {'steps-to-criterion (per seed)':>32} {'AUC mean':>9} {'final min-slot acc':>18}")
+print(f"{'K':>3} {'strategy':>10} {'steps to 0.99 (per seed)':>26} {'steps to 0.5':>18} {'AUC<=400':>9} {'final':>18}")
 for (K, f), rs in sorted(by.items()):
-    print(f"{K:>3} {f:>10} {str([r['steps_to_criterion'] for r in rs]):>32} {np.mean([r['auc'] for r in rs]):>9.3f} {str([round(r['final_minslot'],3) for r in rs]):>18}")
+    print(f"{K:>3} {f:>10} {str([r['steps_to_criterion'] for r in rs]):>26} {str([r['steps_to_half'] for r in rs]):>18} {np.mean([r['auc'] for r in rs]):>9.3f} {str([round(r['final_minslot'],3) for r in rs]):>18}")
 json.dump(rows, open('results/forced_results.json', 'w'), indent=1)

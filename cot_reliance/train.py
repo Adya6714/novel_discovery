@@ -25,7 +25,7 @@ def make_task(spec, seed=0):
         _, p, K = spec.split(':'); return InterWindowTask(int(p), int(K), seed=seed)
     return WordTask(get_group(spec), seed=seed)
 
-def train(group, mode='chain', layers=2, d=128, steps=6000, B=256, Lmin=2, Lmax=12, wd=0.01, lr=1e-3, seed=0, out=None, log_every=500, ckpt_every=0, init=None, force=None, posoff=0):
+def train(group, mode='chain', layers=2, d=128, steps=6000, B=256, Lmin=2, Lmax=12, wd=0.01, lr=1e-3, seed=0, out=None, log_every=500, ckpt_every=0, init=None, force=None, posoff=0, loss_from=0):
     torch.manual_seed(seed)
     task = make_task(group, seed=seed)
     m = GPT(task.vocab, d=d, layers=layers, maxlen=2*Lmax+2+posoff)
@@ -40,6 +40,8 @@ def train(group, mode='chain', layers=2, d=128, steps=6000, B=256, Lmin=2, Lmax=
     for it in range(steps):
         L = int(rng.integers(Lmin, Lmax+1))
         _, _, seq, tgt = task.batch(B, L, mode)
+        if loss_from:   # supervise only chain slots c_j with j >= loss_from (interleaved layout: c_j at index 2j-1)
+            tgt = tgt.clone(); tgt[:, 1:2 * (loss_from - 1):2] = -100
         off = int(rng.integers(0, posoff + 1)) if posoff else 0
         logits = m(seq[:, :-1], allow=allow, pos_offset=off); loss = F.cross_entropy(logits.reshape(-1, task.vocab), tgt[:, 1:].reshape(-1))
         opt.zero_grad(); loss.backward(); torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0); opt.step(); sched.step()
@@ -56,13 +58,13 @@ def train(group, mode='chain', layers=2, d=128, steps=6000, B=256, Lmin=2, Lmax=
             print(f'{group} {mode} L{layers} it{it+1} loss {loss.item():.4f} evalL{Lmax} loss {evl:.4f} acc {evacc:.4f} minslot {minslot:.4f} {time.time()-t0:.0f}s', flush=True)
     if out:
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        torch.save({'state': m.state_dict(), 'cfg': dict(wd=wd, lr=lr, group=group, mode=mode, layers=layers, d=d, Lmax=Lmax, Lmin=Lmin, seed=seed, steps=prev_steps+steps, init=init, force=force, posoff=posoff), 'hist': hist}, out)
+        torch.save({'state': m.state_dict(), 'cfg': dict(wd=wd, lr=lr, group=group, mode=mode, layers=layers, d=d, Lmax=Lmax, Lmin=Lmin, seed=seed, steps=prev_steps+steps, init=init, force=force, posoff=posoff, loss_from=loss_from), 'hist': hist}, out)
     return m, task
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--group'); ap.add_argument('--mode', default='chain'); ap.add_argument('--layers', type=int, default=2)
     ap.add_argument('--steps', type=int, default=6000); ap.add_argument('--seed', type=int, default=0); ap.add_argument('--d', type=int, default=128)
-    ap.add_argument('--out'); ap.add_argument('--lr', type=float, default=1e-3); ap.add_argument('--wd', type=float, default=0.01); ap.add_argument('--B', type=int, default=256); ap.add_argument('--ckpt_every', type=int, default=0); ap.add_argument('--init'); ap.add_argument('--Lmin', type=int, default=2); ap.add_argument('--force'); ap.add_argument('--posoff', type=int, default=0); ap.add_argument('--log_every', type=int, default=500)
+    ap.add_argument('--out'); ap.add_argument('--lr', type=float, default=1e-3); ap.add_argument('--wd', type=float, default=0.01); ap.add_argument('--B', type=int, default=256); ap.add_argument('--ckpt_every', type=int, default=0); ap.add_argument('--init'); ap.add_argument('--Lmin', type=int, default=2); ap.add_argument('--force'); ap.add_argument('--posoff', type=int, default=0); ap.add_argument('--log_every', type=int, default=500); ap.add_argument('--loss_from', type=int, default=0)
     a = ap.parse_args()
-    train(a.group, a.mode, a.layers, a.d, a.steps, B=a.B, Lmin=a.Lmin, lr=a.lr, wd=a.wd, seed=a.seed, out=a.out, ckpt_every=a.ckpt_every, init=a.init, force=a.force, posoff=a.posoff, log_every=a.log_every)
+    train(a.group, a.mode, a.layers, a.d, a.steps, B=a.B, Lmin=a.Lmin, lr=a.lr, wd=a.wd, seed=a.seed, out=a.out, ckpt_every=a.ckpt_every, init=a.init, force=a.force, posoff=a.posoff, log_every=a.log_every, loss_from=a.loss_from)

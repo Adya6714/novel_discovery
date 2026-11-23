@@ -1,0 +1,14 @@
+runs/sweep/K12_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=nan recomp(j>=K)=nan cons_follow=nan
+runs/sweep/K1_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=0.000 recomp(j>=K)=1.000 cons_follow=0.000
+runs/sweep/K2_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=0.000 recomp(j>=K)=1.000 cons_follow=0.000
+runs/sweep/K3_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=0.000 recomp(j>=K)=1.000 cons_follow=0.000
+runs/sweep/K4_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=1.000 recomp(j>=K)=0.000 cons_follow=1.000
+runs/sweep/K5_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=1.000 recomp(j>=K)=0.000 cons_follow=1.000
+runs/sweep/K6_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=1.000 recomp(j>=K)=0.000 cons_follow=0.953
+runs/sweep/K8_L2_s2.pt gate=True minacc=1.000 follow(j>=K)=1.000 recomp(j>=K)=0.000 cons_follow=0.958
+untrained 3 0.0537222224391169 0.05549999988741345
+Traceback (most recent call last):
+  File "/home/user/novel_discovery/cot_reliance/analyse_sweep.py", line 54, in <module>
+    print('untrained', K, s['single_jgeK_follow'], s['single_jgeK_recompute'])
+                          ~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'single_jgeK_follow'

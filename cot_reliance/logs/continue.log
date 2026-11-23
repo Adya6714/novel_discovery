@@ -21,3 +21,5 @@
 09:39:24 runs/sweep/K5_L2_s2.pt gate=1 steps=3000
 09:39:58 runs/sweep/K6_L2_s2.pt gate=1 steps=3000
 09:40:33 runs/sweep/K8_L2_s2.pt gate=0 steps=3000
+09:41:08 runs/sweep/K12_L2_s2.pt gate=1 steps=3000
+09:54:27 runs/sweep/K8_L2_s2.pt gate=1 steps=6000
