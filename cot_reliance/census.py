@@ -25,4 +25,6 @@ for pattern in sys.argv[1:]:
             out[key] = dict(K=t.K, posoff=c.get('posoff', 0), offset=o, seed=c['seed'], minacc=acc, labels=labs,
                             follow=[r['follow'] for r in rows], recompute=[r['recompute'] for r in rows])
             print(f'{key:45s} K={t.K} minacc={acc:.3f} slots1..11: {labs}', flush=True)
-json.dump(out, open('results/census.json', 'w'), indent=1)
+outp = __import__('os').environ.get('CENSUS_OUT', 'results/census.json')
+prev = json.load(open(outp)) if __import__('os').path.exists(outp) else {}
+prev.update(out); json.dump(prev, open(outp, 'w'), indent=1)

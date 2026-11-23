@@ -20,6 +20,16 @@
   "final_minslot": 1.0
  },
  {
+  "path": "runs/forced/K2_read_s2.pt",
+  "K": 2,
+  "force": "read",
+  "seed": 2,
+  "steps_to_criterion": 200,
+  "steps_to_half": 160,
+  "auc": 0.65146484375,
+  "final_minslot": 1.0
+ },
+ {
   "path": "runs/forced/K2_recompute_s0.pt",
   "K": 2,
   "force": "recompute",
@@ -37,6 +47,16 @@
   "steps_to_criterion": 80,
   "steps_to_half": 60,
   "auc": 0.90458984375,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K2_recompute_s2.pt",
+  "K": 2,
+  "force": "recompute",
+  "seed": 2,
+  "steps_to_criterion": 80,
+  "steps_to_half": 60,
+  "auc": 0.90400390625,
   "final_minslot": 1.0
  },
  {
@@ -60,6 +80,16 @@
   "final_minslot": 1.0
  },
  {
+  "path": "runs/forced/K3_read_s2.pt",
+  "K": 3,
+  "force": "read",
+  "seed": 2,
+  "steps_to_criterion": 200,
+  "steps_to_half": 160,
+  "auc": 0.68193359375,
+  "final_minslot": 1.0
+ },
+ {
   "path": "runs/forced/K3_recompute_s0.pt",
   "K": 3,
   "force": "recompute",
@@ -77,6 +107,16 @@
   "steps_to_criterion": 180,
   "steps_to_half": 120,
   "auc": 0.764453125,
+  "final_minslot": 1.0
+ },
+ {
+  "path": "runs/forced/K3_recompute_s2.pt",
+  "K": 3,
+  "force": "recompute",
+  "seed": 2,
+  "steps_to_criterion": 200,
+  "steps_to_half": 120,
+  "auc": 0.74169921875,
   "final_minslot": 1.0
  },
  {
@@ -100,6 +140,16 @@
   "final_minslot": 1.0
  },
  {
+  "path": "runs/forced/K4_read_s2.pt",
+  "K": 4,
+  "force": "read",
+  "seed": 2,
+  "steps_to_criterion": 180,
+  "steps_to_half": 140,
+  "auc": 0.70224609375,
+  "final_minslot": 1.0
+ },
+ {
   "path": "runs/forced/K4_recompute_s0.pt",
   "K": 4,
   "force": "recompute",
@@ -118,6 +168,16 @@
   "steps_to_half": 280,
   "auc": 0.36630859375,
   "final_minslot": 0.99609375
+ },
+ {
+  "path": "runs/forced/K4_recompute_s2.pt",
+  "K": 4,
+  "force": "recompute",
+  "seed": 2,
+  "steps_to_criterion": 560,
+  "steps_to_half": 300,
+  "auc": 0.322265625,
+  "final_minslot": 0.9921875
  },
  {
   "path": "runs/forced/K6_read_s0.pt",
@@ -140,6 +200,16 @@
   "final_minslot": 1.0
  },
  {
+  "path": "runs/forced/K6_read_s2.pt",
+  "K": 6,
+  "force": "read",
+  "seed": 2,
+  "steps_to_criterion": 200,
+  "steps_to_half": 140,
+  "auc": 0.7173828125,
+  "final_minslot": 1.0
+ },
+ {
   "path": "runs/forced/K6_recompute_s0.pt",
   "K": 6,
   "force": "recompute",
@@ -158,5 +228,15 @@
   "steps_to_half": null,
   "auc": 0.07373046875,
   "final_minslot": 0.072265625
+ },
+ {
+  "path": "runs/forced/K6_recompute_s2.pt",
+  "K": 6,
+  "force": "recompute",
+  "seed": 2,
+  "steps_to_criterion": null,
+  "steps_to_half": null,
+  "auc": 0.07451171875,
+  "final_minslot": 0.076171875
  }
 ]
