@@ -16,7 +16,7 @@ is known; the demonstration for CoT intermediates is the contribution. Toy scale
 | `REPORT.md` | Full research report (primary study) |
 | `executive_summary.pdf` | 5-page executive summary (source: `summary/executive_summary.html`) |
 | `docs/01_landscape_and_prioritisation.md` | Audit of the 13 programmes, expansion, ranked 20 opportunities |
-| `docs/02_preregistration_cot_reliance.md` | Preregistration (frozen before any main-task model was trained) |
+| `docs/02_preregistration_cot_reliance.md` | Preregistration (frozen before any window-task model was trained; later design deviations D14–D16 are logged) |
 | `docs/03_novelty_matrix.md` | Prior-art comparison |
 | `docs/04_adversarial_review.md`, `docs/04_adversarial_review_raw.md` | Independent (AI) adversarial review, our responses and the outcomes of the experiments it prompted |
 | `docs/05_decision_log.md` | Every decision, pivot, bug and deviation, in order |
@@ -33,10 +33,10 @@ Requirements: Python ≥ 3.10, `torch` (CPU is enough), `numpy`, `matplotlib`. T
 cd cot_reliance
 python3 test_targets.py                       # target alignment unit test
 # train one model (K = window size; depth 2; seed 0)
-python3 train.py --group iwin:11:4 --Lmin 12 --layers 2 --seed 0 --steps 6000 --out runs/sweep/K4_L2_s0.pt
+python3 train.py --group iwin:11:4 --Lmin 12 --layers 2 --seed 0 --steps 3000 --out runs/sweep/K4_L2_s0.pt
 ./continue_until_gate.sh runs/sweep/K4_L2_s0.pt   # continues training until the accuracy gate passes (cap 18k steps)
 # full sweep as run here
-cat sweep_jobs_iL2.txt | xargs -P 4 -L 1 sh -c 'python3 train.py --group iwin:11:$0 --Lmin 12 --layers $2 --seed $1 --steps 6000 --out runs/sweep/K$0_L$2_s$1.pt'
+cat sweep_jobs_iL2.txt | xargs -P 4 -L 1 sh -c 'python3 train.py --group iwin:11:$0 --Lmin 12 --layers $2 --seed $1 --steps 3000 --out runs/sweep/K$0_L$2_s$1.pt'
 P=2 ./watch_continue.sh sweep_jobs_iL2.txt
 python3 analyse_sweep.py 'runs/sweep/*.pt' results/sweep_results.json --untrained
 python3 summary_table.py                      # results/summary_table.md
