@@ -23,7 +23,7 @@ These observations are compatible if *which* strategy a model learns depends on 
 model that reads its previous written intermediate and a model that recomputes the next intermediate from the input achieve identical
 (zero) loss, so the training objective is indifferent; only the inductive bias of architecture + optimiser decides. We ask a narrow,
 falsifiable question about that inductive bias: **is the choice between reading and recomputing governed by the relative computational
-cost of the two strategies?** In every prior controlled study we found, reading was the cheaper strategy. We construct a task family in
+cost of the two strategies?** In the controlled CoT studies we found (2609.33134, 2602.01017), reading was the cheaper strategy; the reverse trade-off is known from imitation learning (the "copycat" problem: de Haan et al. 2019; Wen et al. 2020), and the general principle that among redundant features training prefers the more *available* one is established (Hermann & Lampinen 2020; Hermann et al. 2023; Shah et al. 2020). Our contribution is to test that principle, with exact interventions and an independently measured cost, on written chain-of-thought intermediates. We construct a task family in
 which a single parameter K moves the cost of recomputation from below to above the cost of reading, and measure causal reliance on the
 written chain with exact interventions.
 
@@ -39,36 +39,42 @@ Preregistration: `docs/02_preregistration_cot_reliance.md` (frozen before any wi
 * H0a: always read (FOLLOW > 0.9 for all K ≥ 2). H0b: always recompute when computable.
 * H2: for fixed K, FOLLOW lower at slots j < K than j ≥ K. H3: depth increases RECOMPUTE at intermediate K.
 
-## 4. Task
-Inputs x_1..x_L ~ U(Z_11), L ~ U{2..12}. Written chain c_j = Σ_{i=max(1,j−K+1)}^{j} x_i (mod 11). Sequence: x_1..x_L, SEP, c_1..c_L;
-loss on chain tokens only (teacher forcing). At chain slot j (the model's input token is c_j; it predicts c_{j+1}) the two exact
-strategies are:
+## 4. Task (as actually run; see decision log D14–D16 for the history)
+Inputs x_1..x_12 ~ U(Z_11) (fixed length L = 12). Written chain c_j = Σ_{i=max(1,j−K+1)}^{j} x_i (mod 11).
+Interleaved sequence x_1 c_1 x_2 c_2 … x_12 c_12, inputs as tokens 0–10 and chain values as tokens 11–21; teacher-forced loss on chain
+tokens only. The prediction of c_{j+1} is made at the position of x_{j+1} (the query token itself). Two exact strategies exist:
 
-| strategy | formula | operands (j ≥ K) | operands (j < K) |
+| strategy | formula | operands retrieved by attention, j ≥ K | j < K |
 |---|---|---|---|
-| READ | c_j + x_{j+1} − x_{j+1−K} | 3 (current token + 2 inputs) | 2 |
-| RECOMPUTE | x_{j+2−K} + … + x_{j+1} | K | j + 1 |
+| READ | c_j + x_{j+1} − x_{j+1−K} | 2: c_j (offset −1), x_{j+1−K} (offset −2K) | 1: c_j |
+| RECOMPUTE | x_{j+2−K} + … + x_{j+1} | K − 1: x_{j+2−K} … x_j (offsets −2, −4, …) | j |
 
-K = 1 makes reading useless (c_j = x_j); K = 2 makes recomputing cheaper (2 vs 3); K = 3 equal (3 vs 3); K ≥ 4 makes reading cheaper;
-K = 12 ≥ L is the ordinary prefix-sum CoT (reading = 2 operands, no leaving element).
+K = 1: the chain is useless (c_j = x_j). K = 2: RECOMPUTE retrieves 1 token, READ 2. K = 3: parity (2 vs 2). K ≥ 4: READ cheaper by operand count.
+K = 12: ordinary prefix-sum chain (no leaving element). **Operand count is only a heuristic; the cost claim is tested with an independent,
+operational measure of cost (§7.1).** Known redundancies: c_1 = x_1, and c_j are prefix sums for j < K, so at j = K the leaving element
+x_1 can be taken from the written c_1 (we observe this; §6.3). The primary outcome is therefore computed over j > K.
 
 ## 5. Methods
-* **Model:** decoder-only pre-LN transformer, d = 128, 4 heads, MLP 4d, learned absolute positions, depth 2 (and 4 where stated).
-* **Training:** AdamW (lr 1e-3, wd 0.01), batch 256, one-cycle schedule, 4000 steps; fresh random data every step (no repetition).
-  Models failing the accuracy gate were *continued* in blocks of 6000 steps (fresh data stream, new one-cycle schedule) up to 22,000 total
-  steps (decision log D13); continuation history stored in each checkpoint's cfg.
-* **Gate:** teacher-forced next-chain-token accuracy ≥ 0.98 at *every* slot for L = 12 (n = 2000). Only gated models enter inference.
-* **Interventions (L = 12, n = 2000 sequences per slot, slots j = 1..11):**
-  - *single*: overwrite c_j with r ≠ c_j uniformly; classify greedy prediction of c_{j+1} as FOLLOW (= READ applied to r),
-    RECOMPUTE (= true c_{j+1}) or OTHER (FOLLOW and RECOMPUTE tokens always differ since r ≠ c_j).
-  - *consistent*: overwrite c_1..c_j with the chain of independently redrawn inputs x'_1..x'_j (the written chain is internally coherent but
-    contradicts the visible input); rows where the counterfactual c'_j equals c_j are dropped. A model that reads *any* chain token follows;
-    only input-recomputation ignores it.
-  - Probability mass on FOLLOW / RECOMPUTE tokens; free-running continuation to slot L and its agreement with the corrupted vs true final value.
-* **Attention signature (no intervention):** layer-wise head-averaged attention from the slot-j query to x_{j+1} (used by both),
-  x_{j+1−K} (used only by READ) and the window interior x_{j+2−K}..x_j (used only by RECOMPUTE).
-* **Negative control:** untrained networks. **Positive controls:** K = 1 (must recompute) and K = 12 (prefix chain).
-* **Statistics:** per-model binomial rates (n = 2000 per slot, SE ≤ 0.011); seed is the unit for cross-model inference (mean ± SD, 3 seeds).
+* **Model:** decoder-only pre-LN transformer, d = 128, 4 heads, MLP 4d, learned absolute positions, depth 2.
+* **Training:** AdamW (lr 1e-3, wd 0.01), batch 256, one-cycle schedule, 3000 steps, fresh random data each step. A gate-and-continue
+  procedure (blocks of 3000 steps, cap 18,000) was in place but never triggered: every model passed the gate at 3000 steps.
+* **Gate:** teacher-forced accuracy ≥ 0.98 at every slot (L = 12, n = 2000).
+* **Interventions (n = 2000 sequences per slot, j = 1..11), three independent kinds:**
+  - *single chain corruption*: c_j ← r ≠ c_j; FOLLOW = prediction equals READ(r); RECOMPUTE = prediction equals true c_{j+1}.
+  - *coherent counterfactual chain*: c_1..c_j ← chain of redrawn inputs x'_1..x'_j (rows with c'_j = c_j dropped). Under it, a model that
+    recomputes from the visible inputs scores RECOMPUTE; reading an *older* chain token lands in OTHER (not FOLLOW), so this intervention
+    is used only to exclude older-chain reading for models that score RECOMPUTE.
+  - *input-side*: x_j ← x'_j with the written chain untouched; READ predicts the original c_{j+1}, RECOMPUTE predicts c_{j+1} + (x'_j − x_j).
+  - All three are validated on hand-coded exact READ / RECOMPUTE oracles (`test_oracle.py`: each oracle scores 1.000 on its own label at
+    every slot). Classification is by argmax, so it identifies the *dominant* route; probabilities are also stored.
+* **Forced-strategy models (independent cost):** identical models whose attention is restricted by a whitelist so that only READ
+  (query sees itself, c_j, x_{j+1−K}) or only RECOMPUTE (query sees x_{j+2−K}..x_{j+1}) is computable; chain-token positions see only
+  themselves. Cost := steps until every slot reaches ≥ 0.99 accuracy (evaluated every 100 steps) and the area under the worst-slot
+  accuracy curve. 2 seeds × K ∈ {2, 3, 4, 6}.
+* **Position-offset control:** models trained with a random absolute-position shift (0–16) per batch, evaluated at shifts 0, 8, 16.
+* **Census:** per slot label READ (FOLLOW ≥ 0.9), RECOMPUTE (RECOMPUTE ≥ 0.9) or MIXED.
+* **Statistics:** seed (model) is the unit; per-slot n = 2000 bounds within-model SE by 0.011 but is not replication. Proportions across
+  models are given with exact (Clopper–Pearson) 95 % intervals.
 
 ## 6. Results
 (filled in below by section)

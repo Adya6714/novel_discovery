@@ -3,3 +3,4 @@ iwin:11:4 chain L2 it1000 loss 0.0003 evalL12 loss 0.0004 acc 1.0000 316s
 iwin:11:4 chain L2 it1500 loss 0.0002 evalL12 loss 0.0002 acc 1.0000 510s
 iwin:11:4 chain L2 it2000 loss 0.0001 evalL12 loss 0.0001 acc 1.0000 680s
 iwin:11:4 chain L2 it2500 loss 0.0001 evalL12 loss 0.0001 acc 1.0000 827s
+iwin:11:4 chain L2 it3000 loss 0.0001 evalL12 loss 0.0001 acc 1.0000 986s
