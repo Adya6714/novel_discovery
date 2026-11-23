@@ -1,0 +1,9 @@
+# third-party paper texts (copyright) - see docs/search_log.md for IDs
+lit/*.txt
+lit/*.pdf
+# model checkpoints are regenerable (see README); results JSON are kept
+cot_reliance/runs/
+__pycache__/
+*.pyc
+lonely_runner/neartight
+lonely_runner/data/chunks_*/
