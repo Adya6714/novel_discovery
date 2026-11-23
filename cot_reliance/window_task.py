@@ -30,6 +30,7 @@ class WindowTask:
     def pred_index(s, j, L): return L + j - 1
     def enc(s, v): return v
     def dec(s, tok): return tok
+    def x_index(s, i, L): return i - 1
     def follow_token(s, r, x, j):
         """value of c_{j+1} implied by READ if the written c_j were r (j 1-indexed, x 0-indexed tensor)."""
         f = r + x[:, j]
@@ -62,5 +63,6 @@ class InterWindowTask(WindowTask):
     # index maps (j is 1-indexed)
     def slot_index(s, j, L=None): return 2 * j - 1          # where written c_j sits
     def pred_index(s, j, L=None): return 2 * (j - 1)        # logits here predict c_j
+    def x_index(s, i, L=None): return 2 * (i - 1)
     def enc(s, v): return v + s.p
     def dec(s, tok): return tok - s.p
