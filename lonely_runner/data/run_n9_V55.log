@@ -1,0 +1,3 @@
+n=9 V=55 leaves 6358402050 expected 6358402050 found 13
+data/nt_n9_V55.txt: n=9 count=13 k-dist={1: 13} max(maxv/q)=54/55=0.9818 at [1, 2, 3, 4, 5, 6, 7, 8, 54] ML=6/55
+amended Fan-Sun violations (k outside [1,n]): []

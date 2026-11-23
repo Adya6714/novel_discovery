@@ -1,0 +1,8 @@
+win:11:8 chain L2 it500 loss 1.7745 105s
+win:11:8 chain L2 it1000 loss 0.7356 250s
+win:11:8 chain L2 it1500 loss 0.0005 363s
+win:11:8 chain L2 it2000 loss 0.0003 463s
+win:11:8 chain L2 it2500 loss 0.0001 556s
+win:11:8 chain L2 it3000 loss 0.0001 652s
+win:11:8 chain L2 it3500 loss 0.4814 751s
+win:11:8 chain L2 it4000 loss 0.0001 841s
