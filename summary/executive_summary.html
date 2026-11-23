@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Read or Recompute</title>
+<style>
+:root{--ink:#0b0b0b;--ink2:#52514e;--muted:#7a7873;--rule:#e2e0da;--blue:#2a78d6;--orange:#eb6834;--bg:#ffffff;--tint:#f5f4f0}
+@page{size:A4}
+body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:9.6pt;line-height:1.42;margin:0}
+h1{font-size:19pt;line-height:1.15;margin:0 0 4px;letter-spacing:-.01em}
+h2{font-size:11.5pt;margin:16px 0 6px;padding-top:6px;border-top:1px solid var(--rule)}
+h3{font-size:10pt;margin:10px 0 4px}
+p{margin:0 0 7px}
+.sub{color:var(--ink2);font-size:10pt;margin-bottom:8px}
+.meta{color:var(--muted);font-size:8.2pt;margin-bottom:10px}
+.box{background:var(--tint);border-left:3px solid var(--blue);padding:8px 11px;margin:8px 0}
+table{border-collapse:collapse;width:100%;margin:6px 0 9px;font-size:8.4pt}
+th,td{border-bottom:1px solid var(--rule);padding:3.5px 5px;text-align:left;vertical-align:top}
+th{color:var(--ink2);font-weight:600;background:#faf9f6}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:0 5px;border-radius:3px;font-size:7.6pt;font-weight:600;color:#fff}
+.s{background:#2f7d32}.m{background:#b07a00}.w{background:#9a9893}
+figure{margin:8px 0 10px}
+figure img{width:100%}
+figcaption{color:var(--ink2);font-size:8pt;margin-top:3px}
+.two{display:flex;gap:14px}.two>div{flex:1}
+.pb{page-break-before:always}
+code{font-size:8.3pt;background:#f2f1ed;padding:0 3px;border-radius:2px}
+ul{margin:2px 0 7px 16px;padding:0}li{margin:1px 0}
+.small{font-size:8pt;color:var(--ink2)}
+</style></head><body>
+
+<h1>Read or recompute? Chain-trained transformers adopt whichever route is learned faster, even when their written intermediates are correct</h1>
+<div class="sub">Executive summary of an autonomous AI research programme (Nov 2026)</div>
+<div class="meta">Repository: github.com/Adya6714/novel_discovery (branch <code>research/discovery-programme</code>) · Full report: <code>REPORT.md</code> ·
+All work computational, done by AI agents (see <code>docs/06_human_vs_ai_contribution.md</code>); no human review yet.</div>
+
+<h2>1. Summary</h2>
+<p>Training a transformer with teacher forcing on <b>correct</b> chain-of-thought (CoT) intermediates leaves a choice open. The model can
+<span style="color:var(--blue);font-weight:600">READ</span> its previous written intermediate, or
+<span style="color:var(--orange);font-weight:600">RECOMPUTE</span> the next one from the input. Both achieve zero loss. We built a task
+family where one knob, the window size <i>K</i> of a running window sum, moves the relative cost of the two routes. We then measured causal
+reliance on the written chain with three oracle-validated interventions in 54 small transformers trained from scratch.</p>
+<div class="box"><b>Findings.</b>
+(1) With correct, noise-free chains, models at <i>K</i> ≤ 2 <b>ignore their chain completely</b>: corrupting a written value never changes the next
+prediction (6/6 models), so they "self-correct" injected errors. (2) The same architecture at <i>K</i> ≥ 4, including ordinary prefix-sum CoT,
+reads its chain and propagates errors (15/15). (3) A cost measure defined <b>without reference to the free models</b> predicts which route is
+adopted. That measure is how fast each route is learned when the other is masked out. It holds in 6/6 comparisons using early learnability.
+(4) Near parity (<i>K</i> = 3) the choice is seed-dependent: 6/9 recompute, 2/9 read, 1/9 split by position. The read and split outcomes depend on
+learned absolute positions and vanish under position-shift training (3/3 recompute).</div>
+<p><b>Why it matters.</b> Corruption-based tests of CoT faithfulness, applied to tasks below the serial "ceiling", measure which route training
+happened to select. Identically trained models can differ in faithfulness by seed. The underlying principle, that training picks the more
+<i>available</i> of redundant solutions, is known from shortcut learning and the "copycat" problem in imitation learning. The new contribution is
+to show, with an independent cost measure, that it governs whether written CoT intermediates are causally used.</p>
+
+<h2>2. Specific claims</h2>
+<table>
+<tr><th>#</th><th>Claim (scope: 2-layer, d=128 transformers; window sums mod 11; length 12)</th><th>Evidence</th><th>Strength</th></tr>
+<tr><td>C1</td><td>Correct chain supervision can yield models whose next-step prediction does not depend on the written intermediate (<i>K</i> ≤ 2)</td><td>6/6 models; FOLLOW 0.000 under 3 intervention types</td><td><span class="tag s">strong</span></td></tr>
+<tr><td>C2</td><td>For <i>K</i> ≥ 4 (incl. prefix CoT) models read the chain; corrupted values propagate to the final answer in 100 % of cases</td><td>15/15 models</td><td><span class="tag s">strong</span></td></tr>
+<tr><td>C3</td><td>The adopted route is the one learned faster early in isolation (attention-masked forced-route models)</td><td>6/6 comparisons by early AUC; 5/6 by steps-to-0.99</td><td><span class="tag m">moderate</span></td></tr>
+<tr><td>C4</td><td>Near parity the choice is seed-dependent with absolute positions; positional randomisation removes READ seeds and per-slot mosaics</td><td>9 + 3 seeds, census</td><td><span class="tag m">moderate, post hoc</span></td></tr>
+<tr><td>C5</td><td>"Self-correction" of corrupted intermediates is a by-product of route selection</td><td>free-running continuation, all models</td><td><span class="tag s">strong (descriptive)</span></td></tr>
+<tr><td>L1</td><td>Lonely Runner: no counterexample to the amended Fan–Sun conjecture for n=7 ≤ 100, n=8 ≤ 70, n=9 ≤ 55; new k=2 septuple (2,7,9,11,13,20,54), ML = 9/65</td><td>exact exhaustive search, cross-checked</td><td><span class="tag w">strong, low significance</span></td></tr>
+</table>
+
+<figure><img src="../figures/fig1_strategy_vs_K.png">
+<figcaption><b>Figure 1.</b> Dominant route at chain slots j &gt; K for each of the 24 sweep models (3 seeds per K). Three intervention types agree
+to within 0.006 for every model. The switch from RECOMPUTE to READ happens between K = 2 and K = 4; K = 3 is seed-dependent.</figcaption></figure>
+
+<h3>Task and routes</h3>
+<p>The sequence interleaves inputs and chain values, <code>x1 c1 x2 c2 … x12 c12</code>, with c<sub>j</sub> = Σ of the last K inputs mod 11.
+At the position of x<sub>j+1</sub> the model predicts c<sub>j+1</sub>. READ = c<sub>j</sub> + x<sub>j+1</sub> − x<sub>j+1−K</sub>, retrieving 2 operands.
+RECOMPUTE = x<sub>j+2−K</sub> + … + x<sub>j+1</sub>, retrieving K−1 operands. K = 2 favours recomputation, K = 3 is parity by operand count, and K ≥ 4 favours reading.
+Operand count is only a heuristic. The cost claim rests on measured learnability (§4, Fig. 2).</p>
+
+<h2 class="pb">3. Novelty and how it was checked</h2>
+<p>We used web search, OpenAlex and arXiv full texts (log: <code>docs/search_log.md</code>), and an independent adversarial AI reviewer who searched
+again and found five works we had missed. These are now in the novelty matrix (<code>docs/03_novelty_matrix.md</code>, 24 rows).</p>
+<table>
+<tr><th>Closest work</th><th>What it shows</th><th>What we add</th></tr>
+<tr><td>He et al. 2026, <i>Ceiling of a Task</i> (2609.33134)</td><td>Above the serial ceiling the chain is necessary; Z60 chain models depend on their chain</td><td>The below-ceiling regime, where a model may ignore a <i>correct</i> chain; our K ≥ 4 results replicate theirs</td></tr>
+<tr><td>Wang, Alazali &amp; Zhong 2026 (2602.01017)</td><td>Noise in chains drives skip-step reasoning (simplicity bias)</td><td>A zero-noise regime where skipping is cheaper; a cost dial; independent cost</td></tr>
+<tr><td>Liu et al. 2023, <i>Shortcuts to Automata</i></td><td>Asserts that models "can ignore the scratchpad" (no causal test)</td><td>A causal test, and when it happens</td></tr>
+<tr><td>Hermann et al. 2020/2023; Shah et al. 2020</td><td>Availability/simplicity bias among redundant features</td><td>The same principle applied to written CoT intermediates</td></tr>
+<tr><td>de Haan et al. 2019; Wen et al. 2020 (copycat)</td><td>Policies copy their own previous action instead of computing</td><td>The transformer/CoT analogue, in both directions</td></tr>
+<tr><td>Zhong et al. 2023, <i>Clock &amp; Pizza</i></td><td>Seeds and hyperparameters select different algorithms</td><td>The same phenomenon for chain reliance, at cost parity</td></tr>
+</table>
+<p class="small">Honest assessment: the principle is not new; the specific demonstration is incremental but, to our knowledge, unreported.
+No prior work we found shows that correct, noise-free chain supervision can produce a model that ignores its chain.</p>
+
+<h2>4. Testable predictions (and the ones already tested)</h2>
+<div class="two"><div>
+<ul>
+<li><b>Tested ✓</b> Forced-route learnability ranks the routes the same way free models choose them (Fig. 2).</li>
+<li><b>Tested ✓</b> Randomising absolute positions removes per-slot mosaics but keeps the K = 2 / K = 4 contrast.</li>
+<li><b>Tested ✓</b> Models that ignore the chain recover from corrupted chains; models that read it propagate errors.</li>
+<li><b>Open</b> Raising READ cost at fixed K (filler between chain tokens) should flip K = 4 models to RECOMPUTE.</li>
+<li><b>Open</b> Raising RECOMPUTE cost (two-token inputs) should flip K = 2 models to READ.</li>
+<li><b>Open</b> With relative positions (RoPE/ALiBi), parity outcomes should follow early learnability.</li>
+<li><b>Open</b> In LLM fine-tuning on CoT, chain reliance should fall for steps that are easy to compute in one pass.</li>
+</ul></div>
+<div><figure style="margin-top:0"><img src="../figures/fig2_forced_learnability.png">
+<figcaption><b>Figure 2.</b> Independent cost. Worst-slot accuracy over training when only READ (blue) or only RECOMPUTE (orange) is computable
+(attention whitelists), 3 seeds. RECOMPUTE learns faster at K=2; the two are near-tied at K=3; READ is faster at K=4 and is the only route
+learned at K=6.</figcaption></figure></div></div>
+
+<table>
+<tr><th>K</th><th>Steps to 0.99, READ-only</th><th>RECOMPUTE-only</th><th>Faster early</th><th>Free models READ-dominant</th></tr>
+<tr><td>2</td><td class="n">200, 180, 200</td><td class="n">80, 80, 80</td><td>RECOMPUTE</td><td class="n">0/3</td></tr>
+<tr><td>3</td><td class="n">200, 180, 200</td><td class="n">160, 180, 200</td><td>RECOMPUTE (marginal)</td><td class="n">2/9</td></tr>
+<tr><td>4</td><td class="n">180, 160, 180</td><td class="n">400, 500, 560</td><td>READ</td><td class="n">3/3</td></tr>
+<tr><td>6</td><td class="n">180, 160, 200</td><td class="n">never (≤ 800)</td><td>READ</td><td class="n">3/3</td></tr>
+<tr><td>3 (pos-shift)</td><td class="n">400, 440</td><td class="n">plateau 0.95</td><td>RECOMPUTE (to 0.5)</td><td class="n">0/3</td></tr>
+<tr><td>4 (pos-shift)</td><td class="n">340, 400</td><td class="n">plateau 0.84</td><td>READ</td><td class="n">1/1</td></tr>
+</table>
+
+<h2 class="pb">5. Controls, known results and false-positive checks</h2>
+<ul>
+<li><b>Metric positive controls:</b> hand-coded exact READ and RECOMPUTE oracles score 1.000 on their own label at every slot, for all three
+interventions and free-running continuation (<code>test_oracle.py</code>).</li>
+<li><b>Negative control:</b> untrained networks give FOLLOW ≈ RECOMPUTE ≈ 0.05.</li>
+<li><b>Accuracy gate:</b> every analysed model has teacher-forced accuracy ≥ 0.98 at every slot. The gate caught a target off-by-one bug and a
+misleading training-loss readout during development (decision log D10, D14).</li>
+<li><b>Known result reproduced:</b> prefix-sum CoT models depend on their chain, matching 2609.33134.</li>
+<li><b>Alternative explanation, older-chain reading:</b> excluded for RECOMPUTE models by the coherent counterfactual chain and by input-side
+corruption, which they track 100 %.</li>
+<li><b>Alternative explanation, absolute-position artefact:</b> confirmed for the parity mosaics and refuted for the main contrast (Fig. 3).</li>
+<li><b>Redundancy confound</b> (c<sub>1</sub> = x<sub>1</sub>): models take the leaving element from the written chain at j = K (85 % for K = 4), so that slot is excluded from the primary outcome.</li>
+</ul>
+<div class="two"><div>
+<figure style="margin-top:0"><img src="../figures/fig3_census.png">
+<figcaption><b>Figure 3.</b> Per-slot dominant route. K=3 with absolute positions is seed-dependent (6/9 RECOMPUTE, 2/9 READ, 1 split). With position-shift
+training, all K=3 models recompute; K=2 and K=4 are unchanged.</figcaption></figure></div>
+<div>
+<h3>6. Verification ladder</h3>
+<table>
+<tr><th>Level</th><th>Result</th></tr>
+<tr><td>1 Internal consistency</td><td>Three interventions agree within 0.006; unit tests pass</td></tr>
+<tr><td>2 Known results</td><td>Prefix-CoT reliance reproduced; all published Lonely Runner counts reproduced</td></tr>
+<tr><td>3 Positive/negative controls</td><td>Oracles 1.000; untrained ≈ 0.05</td></tr>
+<tr><td>4 Competing explanations</td><td>Older-chain reading excluded; position artefact confirmed for mosaics only; spillover inconclusive</td></tr>
+<tr><td>5 Robustness</td><td>3–9 seeds per cell; position shifts; loss masking; dynamics stable 1000–3000 steps</td></tr>
+<tr><td>6 Independent method</td><td>Forced-route learnability, a cost measure independent of the outcome</td></tr>
+<tr><td>7 Independent replication</td><td><b>Partial:</b> a separate AI reviewer re-implemented the interventions and reproduced the numbers. <b>Not</b> an independent human or experimental replication.</td></tr>
+</table></div></div>
+
+<h2 class="pb">7. Limitations</h2>
+<ul>
+<li>Toy setting: one task family, one width, depth 2, fixed length; generality to other architectures and to LLMs is untested.</li>
+<li>Constant-K tasks are below the serial ceiling. The chain never bridges depth, so the conclusions apply to that regime.</li>
+<li>The cost criterion was not fixed in advance: early learnability predicts 6/6, steps-to-0.99 predicts 5/6.</li>
+<li>Argmax labels identify the <i>dominant</i> route; minority routes may coexist.</li>
+<li>The preregistration was overtaken by design changes after pilots (layout, fixed length, budget). All changes are logged with reasons;
+the "frozen" timestamp is a local file time, not an external registry. The mosaic, spillover and position analyses are post hoc.</li>
+<li>Small samples (3 seeds per K; 9 at parity). Long-training stability is untested.</li>
+<li>All design, analysis and review were done by AI agents.</li>
+</ul>
+
+<h2>8. Implications</h2>
+<ul>
+<li>CoT faithfulness tests should report variation across training runs and the relative learnability of the competing routes.</li>
+<li>"Self-correction" of injected errors can reflect a model ignoring its chain rather than detecting errors.</li>
+<li>To make models monitorable through their chain, make reading the chain more learnable than recomputing, for example by targeting
+intermediates that are hard to compute in one pass.</li>
+</ul>
+
+<h2>9. Method in brief and reproducible code</h2>
+<p>PyTorch, CPU only. Decoder-only pre-LN transformer, d=128, 4 heads, 2 layers, learned absolute positions. AdamW (lr 1e-3, wd 0.01), batch 256,
+3000 steps, fresh data every step. Interventions use n = 2000 sequences per slot. Forced-route models use attention whitelists. Code, per-model results,
+logs and figures: <code>cot_reliance/</code>; reproduction commands in <code>README.md</code> (≈ 15 CPU-minutes per model).
+Lonely-runner kernel: <code>lonely_runner/neartight.c</code>, exact and cross-checked.</p>
+<p class="small">Landscape and selection: the 13 supplied programmes were audited (<code>docs/01</code>). Programmes needing laboratory, field or GPU
+resources were documented but not advanced. The full adversarial review and our point-by-point responses are in <code>docs/04*</code>; failed directions are in <code>docs/07</code>.</p>
+
+<h2>10. Key references</h2>
+<p class="small">He, Fan, Xiao, Marculescu &amp; Ribeiro 2026, arXiv 2609.33134 · Wang, Alazali &amp; Zhong 2026, arXiv 2602.01017 · Liu et al. 2023, ICLR, arXiv 2210.10749 ·
+Hermann &amp; Lampinen 2020, arXiv 2006.12433 · Hermann, Mobahi, Fel &amp; Mozer 2024, arXiv 2310.16228 · Shah et al. 2020, arXiv 2006.07710 ·
+de Haan, Jayaraman &amp; Levine 2019, arXiv 1905.11979 · Wen et al. 2020, arXiv 2010.14876 · Zhong, Liu, Tegmark &amp; Andreas 2023, arXiv 2306.17844 ·
+Shih, Winnicki &amp; Darve 2026, arXiv 2606.29522 · Zhu, Wang &amp; Sui 2025, arXiv 2505.04955 · Lanham et al. 2023, arXiv 2307.13702 ·
+Garcia 2026, arXiv 2605.10799 · Valmeekam et al. 2026, TMLR, arXiv 2505.13775 · Cordella 2026, arXiv 2609.03444 · Fan &amp; Sun, arXiv 2306.10417 ·
+Yi, Gill &amp; Bu 2026, arXiv 2610.40694.</p>
+</body></html>

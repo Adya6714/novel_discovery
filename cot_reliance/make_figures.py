@@ -68,10 +68,10 @@ try:
     ax.set_yticks(range(len(items)), [f"K={v['K']} seed {v['seed']}" + (f" (pos-shift trained, eval +{v['offset']})" if v['posoff'] else '') for k, v in items], fontsize=6.5)
     ax.set_xticks(range(1, 12)); ax.set_xlabel('corrupted chain slot j'); ax.set_xlim(0.4, 11.6); ax.set_ylim(-0.6, len(items) - 0.4)
     ax.invert_yaxis(); ax.grid(False)
-    ax.legend(handles=[Patch(color=BLUE, label='READ'), Patch(color=ORANGE, label='RECOMPUTE'), Patch(color=GRAY, label='mixed')],
-              fontsize=7, loc='lower center', bbox_to_anchor=(0.5, 1.03), ncol=3)
-    ax.set_title('Per-slot dominant route (FOLLOW or RECOMPUTE ≥ 0.9)', pad=22)
-    fig.tight_layout(); fig.savefig(f'{out}/fig3_census.png', dpi=220); plt.close(fig)
+    ax.set_title('Per-slot dominant route (FOLLOW or RECOMPUTE ≥ 0.9)')
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    fig.legend(handles=[Patch(color=BLUE, label='READ'), Patch(color=ORANGE, label='RECOMPUTE'), Patch(color=GRAY, label='mixed')],
+               fontsize=7, loc='lower center', ncol=3, bbox_to_anchor=(0.6, 0.0)); fig.savefig(f'{out}/fig3_census.png', dpi=220); plt.close(fig)
 except FileNotFoundError:
     print('no census yet')
 print('figures written')
