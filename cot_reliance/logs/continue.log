@@ -2,3 +2,7 @@
 08:15:48 runs/sweep/K2_L2_s0.pt gate=1 steps=3000
 08:15:52 runs/sweep/K3_L2_s0.pt gate=1 steps=3000
 08:15:57 runs/sweep/K4_L2_s0.pt gate=1 steps=3000
+08:31:05 runs/sweep/K5_L2_s0.pt gate=1 steps=3000
+08:32:39 runs/sweep/K6_L2_s0.pt gate=1 steps=3000
+08:32:43 runs/sweep/K8_L2_s0.pt gate=1 steps=3000
+08:32:48 runs/sweep/K12_L2_s0.pt gate=1 steps=3000

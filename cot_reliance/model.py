@@ -16,10 +16,14 @@ class GPT(nn.Module):
         s.tok = nn.Embedding(vocab, d); s.pos = nn.Embedding(maxlen, d)
         s.blocks = nn.ModuleList([Block(d, h) for _ in range(layers)])
         s.lnf = nn.LayerNorm(d); s.head = nn.Linear(d, vocab)
-    def forward(s, idx, return_resid=False):
+    def forward(s, idx, return_resid=False, allow=None, pos_offset=0):
+        """allow: optional (T,T) bool matrix of permitted attention (forced-strategy models); pos_offset: integer shift of
+        absolute positions (position-offset control)."""
         T = idx.shape[1]
         mask = torch.triu(torch.full((T, T), float('-inf'), device=idx.device), 1)
-        x = s.tok(idx) + s.pos(torch.arange(T, device=idx.device))
+        if allow is not None:
+            mask = mask.masked_fill(~allow[:T, :T], float('-inf'))
+        x = s.tok(idx) + s.pos(torch.arange(T, device=idx.device) + pos_offset)
         resid = [x]
         for b in s.blocks:
             x = b(x, mask); resid.append(x)

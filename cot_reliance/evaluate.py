@@ -12,7 +12,7 @@ from train import make_task; from model import GPT
 def load(path):
     ck = torch.load(path, weights_only=False); c = ck['cfg']
     task = make_task(c['group'], seed=12345)
-    m = GPT(task.vocab, d=c['d'], layers=c['layers'], maxlen=2*c['Lmax']+2); m.load_state_dict(ck['state']); m.eval()
+    m = GPT(task.vocab, d=c['d'], layers=c['layers'], maxlen=2*c['Lmax']+2+c.get('posoff', 0)); m.load_state_dict(ck['state']); m.eval()
     return m, task, c
 
 @torch.no_grad()
@@ -57,3 +57,18 @@ def intervene(m, task, L, j, n=2000, g=None, freerun=True, kind='single'):
         out['final_follow'] = (final == f).float().mean().item()
         out['final_true'] = (final == c[:, -1]).float().mean().item()
     return out
+
+@torch.no_grad()
+def intervene_input(m, task, L, j, n=2000, g=None):
+    """Input-side intervention (no chain token touched). At the prediction of c_{j+1}, replace the input x_j (inside the window,
+    used only by RECOMPUTE when K >= 2) with x_j' != x_j, leaving the written chain c_1..c_j as it was.
+      READ-consistent prediction      : original c_{j+1}           (READ uses c_j, x_{j+1}, x_{j+1-K}; none changed)
+      RECOMPUTE-consistent prediction : c_{j+1} + (x_j' - x_j)
+    Requires K >= 2 and j >= 1."""
+    x, c, seq, _ = task.batch(n, L, 'chain', g=g)
+    d = torch.randint(1, task.G, (n,), generator=g)
+    s = seq.clone(); s[:, task.x_index(j, L)] = (x[:, j - 1] + d) % task.G
+    q = task.pred_index(j + 1, L)
+    pred = task.dec(m(s[:, :q + 1])[:, -1].argmax(-1))
+    read_tok = c[:, j]; rec_tok = (c[:, j] + d) % task.G
+    return dict(j=j, read_consistent=(pred == read_tok).float().mean().item(), recompute_consistent=(pred == rec_tok).float().mean().item())

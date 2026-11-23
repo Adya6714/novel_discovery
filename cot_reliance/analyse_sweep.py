@@ -3,7 +3,7 @@ Per model: clean teacher-forced accuracy at L=12 (gate >= 0.98 at every slot), a
 at L=12, FOLLOW / RECOMPUTE / OTHER for each slot j=1..11 (n=2000 each), probability mass, free-run final outcomes,
 and attention signature (mass on the leaving element vs window interior, clean sequences)."""
 import glob, json, sys, os, torch, numpy as np
-from evaluate import load, clean_acc, intervene
+from evaluate import load, clean_acc, intervene, intervene_input
 from attention import attn_profile
 from model import GPT
 from train import make_task
@@ -22,11 +22,15 @@ def summarise(m, task, c, g):
     for kind in ['single', 'consistent']:
         rows = [intervene(m, task, L, j, n=2000, g=g, kind=kind, freerun=True) for j in range(1, L)]
         r[kind] = rows
-        for name, sel in [('jgeK', [x for x in rows if x['j'] >= K]), ('jltK', [x for x in rows if x['j'] < K])]:
+        for name, sel in [('jgeK', [x for x in rows if x['j'] >= K]), ('jgtK', [x for x in rows if x['j'] > K]), ('jltK', [x for x in rows if x['j'] < K])]:
             if sel:
                 for key in ['follow', 'recompute', 'other', 'p_follow', 'p_recompute', 'final_follow', 'final_true']:
                     r[f'{kind}_{name}_{key}'] = float(np.mean([x[key] for x in sel]))
     if K >= 2:
+        r['input'] = [intervene_input(m, task, L, j, n=2000, g=g) for j in range(1, L)]
+        for name, sel in [('jgeK', [x for x in r['input'] if x['j'] >= K]), ('jgtK', [x for x in r['input'] if x['j'] > K])]:
+            if sel:
+                r[f'input_{name}_read'] = float(np.mean([x['read_consistent'] for x in sel])); r[f'input_{name}_recompute'] = float(np.mean([x['recompute_consistent'] for x in sel]))
         prof = attn_profile(m, task, g=g)
         keys = [k for k in prof[0] if k != 'j']
         r['attn'] = {k: float(np.mean([x[k] for x in prof])) for k in keys}
@@ -43,8 +47,8 @@ for path in sorted(glob.glob(pattern)):
 
 if len(sys.argv) > 3 and sys.argv[3] == '--untrained':   # negative control
     for K in [3, 12]:
-        task = make_task(f'win:11:{K}', seed=12345); torch.manual_seed(0)
-        m = GPT(task.vocab, d=128, layers=2, maxlen=26).eval()
+        task = make_task(f'iwin:11:{K}', seed=12345); torch.manual_seed(0)
+        m = GPT(task.vocab, d=128, layers=2, maxlen=26).eval()  # interleaved layout, same as trained models
         s = summarise(m, task, dict(group=f'win:11:{K}', layers=2, untrained=True), torch.Generator().manual_seed(2024))
         res[f'untrained_K{K}'] = s
         print('untrained', K, s['single_jgeK_follow'], s['single_jgeK_recompute'])
